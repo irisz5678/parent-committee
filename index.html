@@ -23,7 +23,7 @@
 <body>
   <main class="app">
     <section class="page active" id="home">
-      <header class="header"><div><div class="school">未设置班级</div><div class="sub">家委工作台</div></div><button class="bell" aria-label="通知">♧</button></header>
+      <header class="header"><div><div class="school">1（6）班</div><div class="sub">家委工作台</div></div><button class="bell" aria-label="通知">♧</button></header>
       <div class="balance"><div class="eyebrow">班费余额</div><div class="amount" id="balance">¥4,280.00</div><div class="balance-grid"><div><span>本期收入</span><strong id="income">¥4,600.00</strong></div><div><span>本期支出</span><strong id="expense">¥320.00</strong></div></div></div>
       <div class="quick"><button data-action="add"><i>✎</i>记一笔</button><button data-nav="ledger"><i>▤</i>缴费记录</button><button data-nav="activities"><i>⚑</i>发起活动</button><button data-toast="班级物资功能即将开放"><i>◈</i>班级物资</button></div>
       <div class="section-head"><h2>待办事项</h2><button class="link" data-toast="已显示全部待办">全部 ›</button></div>
@@ -38,7 +38,9 @@
   <div class="modal-backdrop" id="modal"><form class="modal" id="transaction-form"><h2>记一笔</h2><div class="form-grid"><div class="field"><label>类型</label><select id="type"><option value="out">支出</option><option value="in">收入</option></select></div><div class="field"><label>金额（元）</label><input id="value" type="number" min="0.01" step="0.01" placeholder="例如 80" required></div></div><div class="field"><label>用途／摘要</label><input id="title" maxlength="30" placeholder="例如：活动材料" required></div><div class="form-grid"><div class="field"><label>日期</label><input id="date" type="date" required></div><div class="field"><label>经办人</label><input id="person" maxlength="16" placeholder="例如：李妈妈"></div></div><div class="modal-actions"><button class="cancel" type="button" data-action="close">取消</button><button class="primary" type="submit">保存记录</button></div></form></div><div class="toast" id="toast"></div>
   <script>
     const initial=[];
-    let items=JSON.parse(localStorage.getItem('parent-committee-records')||'null')||initial, filter='all'; const q=s=>document.querySelector(s); const fmt=n=>'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    let items=JSON.parse(localStorage.getItem('parent-committee-records')||'null')||initial, filter='all';
+    if(!localStorage.getItem('parent-committee-cleanup-v1')){items=items.filter(x=>!(x.title==='班费'&&x.type==='out'&&Number(x.value)===4000));localStorage.setItem('parent-committee-records',JSON.stringify(items));localStorage.setItem('parent-committee-cleanup-v1','1')}
+    const q=s=>document.querySelector(s); const fmt=n=>'¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
     function totals(){let inc=items.filter(x=>x.type==='in').reduce((a,x)=>a+x.value,0),out=items.filter(x=>x.type==='out').reduce((a,x)=>a+x.value,0);q('#balance').textContent=fmt(inc-out);q('#income').textContent=q('#sum-income').textContent=fmt(inc);q('#expense').textContent=q('#sum-expense').textContent=fmt(out)}
     function render(){const list=filter==='all'?items:items.filter(x=>x.type===filter);q('#transactions').innerHTML=list.length?list.map(x=>`<article class="transaction"><div class="txn-icon ${x.kind||''}">${x.icon||'◉'}</div><div class="txn-main"><div class="txn-title">${escapeHtml(x.title)}</div><div class="txn-meta">${prettyDate(x.date)} · ${escapeHtml(x.meta||'已保存')}</div></div><div><div class="txn-amount ${x.type==='out'?'out':''}">${x.type==='in'?'+':'-'} ${fmt(x.value)}</div><div class="txn-badge ${x.type==='out'?'ok':''}">${x.type==='in'?'历史汇总':'已附凭证'}</div></div></article>`).join(''):'<div class="empty">此分类还没有记录</div>';totals()}
     function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))} function prettyDate(v){let d=new Date(v+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`}
